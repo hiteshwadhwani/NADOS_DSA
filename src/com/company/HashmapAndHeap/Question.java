@@ -1,7 +1,9 @@
 package com.company.HashmapAndHeap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.PriorityQueue;
 
 public class Question {
     //https://nados.io/article/highest-frequency-character
@@ -106,7 +108,39 @@ public class Question {
         }
     }
 
+    //https://nados.io/question/k-largest-elements
+    public static void solve(int n,int[] arr,int k){
+        PriorityQueue<Integer> pq = new PriorityQueue<>(Collections.reverseOrder());
+        for (int i:arr){
+            pq.add(i);
+        }
+        for (int i=0;i<k;i++){
+            System.out.print(pq.remove() + " ");
+        }
+    }
 
+    //https://nados.io/question/sort-k-sorted-array
+    public static void SortKsortedArray(int[] arr, int k){
+        PriorityQueue<Integer> pq = new PriorityQueue<>();
+
+        //add k+1 elements in priorityQueue
+        for (int i=0;i<k+1;i++){
+            pq.add(arr[i]);
+        }
+
+        //add 1 element and remove 1 element at a time
+        for (int i=k+1;i<arr.length;i++){
+            System.out.println(pq.remove());
+            pq.add(arr[i]);
+        }
+        //now the array is empty remove all the elements from the priorityQueue
+        while (!pq.isEmpty()){
+            System.out.println(pq.remove());
+        }
+
+        //time complexity - O(nlogk)
+        //why log k ? - because we have maintained the height of priorityQueue k
+    }
 
 
 
