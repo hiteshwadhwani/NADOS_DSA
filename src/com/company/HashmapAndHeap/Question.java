@@ -141,6 +141,49 @@ public class Question {
         //time complexity - O(nlogk)
         //why log k ? - because we have maintained the height of priorityQueue k
     }
+    static class Pair implements Comparable<Pair>{
+        int LI; //list index
+        int DI; //data index
+        int data; //data
+        Pair(int LI,int DI,int data){
+            this.LI = LI;
+            this.DI = DI;
+            this.data = data;
+        }
+
+        @Override
+        public int compareTo(Pair o) {
+            return this.data - o.data;
+        }
+    }
+
+    public static ArrayList<Integer> mergeKSortedLists(ArrayList<ArrayList<Integer>> lists){
+        ArrayList<Integer> rv = new ArrayList<>();
+        PriorityQueue<Pair> pq = new PriorityQueue<>();
+
+        for (int i=0;i<lists.size();i++){
+            pq.add(new Pair(i , 0, lists.get(i).get(0)));
+        }
+
+        while (!pq.isEmpty()){
+            //remove
+            Pair top = pq.remove();
+
+            //work
+            rv.add(top.data);
+
+            //add
+            if(top.DI+1 < lists.get(top.LI).size()){
+                pq.add(new Pair(top.LI , top.DI +1 , lists.get(top.LI).get(top.DI+1)));
+            }
+
+
+        }
+
+        return rv;
+    }
+
+
 
 
 
