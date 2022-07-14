@@ -1,5 +1,7 @@
 package com.company.dp;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 //tabulation (recommended) (iterative approach)-
@@ -296,6 +298,399 @@ public class Questions {
         return dp[amt];
 
     }
+    static class PairZeroOneKnapsack{
+        int max; //max value
+        ArrayList<Integer> list; //track of indices of value used to create max value
+        PairZeroOneKnapsack(int max){
+            this.max = max;
+            this.list = new ArrayList<>();
+        }
+    }
+
+
+
+    //https://nados.io/question/zero-one-knapsack
+    //(!!!!!!!!!!!failed few test cases!!!!!!!!!!(sumeet sir approach written below!!!!!!!!!)
+    public static int ZeroOneKnapsack(int[] val,int[] wt,int bagCap){
+        //tabulation
+        PairZeroOneKnapsack[] dp = new PairZeroOneKnapsack[bagCap+1];
+        dp[0] = new PairZeroOneKnapsack(0);
+        for (int i=1;i<bagCap+1;i++){
+            PairZeroOneKnapsack nextans = new PairZeroOneKnapsack(0);
+            for (int j=0;j<val.length;j++){
+                //weight should not be greater than bagCapacity
+                if(wt[j] > i){
+                    continue;
+                }
+                PairZeroOneKnapsack rem = dp[i - wt[j]];
+                int nextMax = val[j] + rem.max;
+
+                if(!rem.list.contains(j)){
+                    if(nextans.max < nextMax){
+                        nextans.max = nextMax;
+                        nextans.list.clear();
+                        nextans.list.addAll(rem.list);
+                        nextans.list.add(j);
+                    }
+                }
+            }
+            dp[i] = nextans;
+        }
+        return dp[bagCap].max;
+    }
+
+
+    //https://nados.io/question/zero-one-knapsack
+    //(!!!!!!!!!!!!!!sumeet sir approach!!!!!!!!!!!!!!!!!!)
+    public static int ZeroOneKnapsack1(int[] val,int[] wt,int bagCap){
+        int[][] dp = new int[val.length+1][bagCap+1];
+        for (int i=1;i<val.length+1;i++){
+            for (int j=1;j<bagCap+1;j++){
+                //weight is greater than bagCapacity
+                if(wt[i-1] > j){
+                    dp[i][j] = dp[i-1][j];
+                }
+                else {
+                    dp[i][j] = Math.max(dp[i-1][j] , val[i-1] + dp[i-1][j - wt[i-1]]);
+                }
+            }
+        }
+        return dp[bagCap][val.length];
+    }
+
+    static class Items implements Comparable<Items>{
+        int val;
+        int wt;
+        double ratio;
+        Items(int val, int wt, double ratio){
+            this.val = val;
+            this.wt = wt;
+            this.ratio = ratio;
+        }
+
+        //descending order
+        @Override
+        public int compareTo(Items o) {
+            if(this.ratio == o.ratio){
+                return 0;
+            }
+            else if(this.ratio < o.ratio){
+                return +1;
+            }
+            else {
+                return -1;
+            }
+        }
+    }
+
+
+    //https://nados.io/question/fractional-knapsack-official
+    public static double FractionalKnapsack(int[] val,int[] wt,int bagCapacity){
+        //not using dynamic approach
+        //greedy approach
+        //first find out value/weight ration for all items
+        //add value if weight<=bagCapacity
+        //else add fraction of value fraction*bagCapacityLeft
+
+        Items[] item = new Items[val.length];
+        for (int i=0;i<val.length;i++){
+            item[i] = new Items(val[i] , wt[i], (val[i]*1.0)/wt[i]);
+        }
+        Arrays.sort(item);
+        int i=0;
+        int value = 0;
+        while (bagCapacity > 0 && i< item.length){
+            if(bagCapacity >= item[i].wt){
+                bagCapacity -= item[i].wt;
+                value += item[i].val;
+            }
+            else {
+                return value + item[i].ratio*bagCapacity;
+            }
+            i++;
+        }
+        return value;
+    }
+
+
+
+    //<------------NEW PATTERN ALERT------------->
+    //<-------------string DP questions---------->
+
+    //patter1 - include or exclude
+
+    //https://nados.io/question/count-binary-strings
+    public static int CountBinaryString(int n){
+        int[][] dp = new int[2][n+1];
+        //dp[0][i] = string of length i ending with 0
+        //dp[1][i] = string of length i ending with 1
+        dp[0][1] = 1;
+        dp[1][1] = 1;
+        for (int j=2;j<n+1;j++){
+            dp[0][j] = dp[1][j-1];
+            dp[1][j] = dp[0][j-1] + dp[1][j-1];
+        }
+        return dp[0][n] + dp[1][n];
+    }
+
+    public static long ArrangeBuildings(int n){
+        long[][] dp = new long[2][n+1];
+        //dp[0][i] = string of length i ending with building
+        //dp[1][i] = string of length i ending with space
+        dp[0][1]= 1;
+        dp[1][1] =1;
+        for (int j=2;j<n+1;j++){
+            dp[0][j] = dp[1][j-1];
+            dp[1][j] = dp[0][j-1]+dp[1][j-1];
+        }
+        long sum = dp[0][n] + dp[1][n];
+        return sum*sum;
+    }
+
+    //https://nados.io/question/count-encodings
+    public static int CountEncodings(String str){
+        int[] dp = new int[str.length()];
+        //dp[i] = number of encodings till index i in string str
+        //four cases - 1) 0 and 0
+        //             2) 0 and non-zero
+        //             3) non-zero and 0
+        //             4) non-zero and non-zero
+        // str.substring(i-1,i+1) <= 26 - imp case
+        dp[0] = 1; //string of length 1 will always contain one encode
+        for (int i=1;i<dp.length;i++){
+            if(str.charAt(i-1) == '0' && str.charAt(i) == '0'){
+                dp[i] = 0; //if both are 0 the no encoding will be made
+            }
+            else if(str.charAt(i-1) != '0' && str.charAt(i) == '0'){
+                if(str.charAt(i-1) == '1' || str.charAt(i-1) == '2'){
+                    dp[i] = i-2 < 0 ? 1 : dp[i-2];
+                }
+                else {
+                    dp[i] = 0;
+                }
+            }
+            else if(str.charAt(i-1) == '0' && str.charAt(i) != '0'){
+                dp[i] = dp[i-1];
+            }
+            else {
+                if(Integer.parseInt(str.substring(i-1 , i+1)) < 27) {
+                    dp[i] = dp[i - 1] + (i-2 < 0 ? 1 : dp[i - 2]);
+                }
+                else {
+                    dp[i] = dp[i-1];
+                }
+            }
+
+        }
+        return dp[str.length()-1];
+
+    }
+
+    //https://nados.io/question/count-a-b-c-subsequences
+    public static int CountABCSubsequences(String str){
+        //tabulation
+        int[][] dp = new int[3][str.length()+1];
+        //dp[0][i] = it stores the number of subsequences till str.substring(i) of pattern a+
+        //dp[1][i] = it stores the number of subsequences till str.substring(i) of pattern a+b+
+        //dp[2][i] = it stores the number of subsequences till str.substring(i) of pattern a+b+c+
+        //formula for finding a+ = 2a + 1 //why 1 = a will make subsequence of itself for patter a+
+        //formula for finding a+b+ = 2b + a // why + a = because b can make subsequence by adding itself in a+ for pattern a+b+
+        //formula for finding a+b+c+ = 2c + b //// why + b = because c can make subsequence by adding itself in a+b+ pattern for pattern a+b+c+
+        // why 2a , 2b , 2c ? = because character always have two choice to combine with previous subsequence or not
+
+
+        //<--------(one approach for above given explanation)----->
+//        for (int i=1;i< dp.length;i++){
+//            if(str.charAt(i-1) == 'a'){
+//                dp[0][i] = 2 * dp[0][i-1] + 1;
+//                dp[1][i] = dp[1][i-1];
+//                dp[2][i] = dp[2][i-1];
+//            }
+//            else if(str.charAt(i-1) == 'b'){
+//                dp[0][i] = dp[0][i-1];
+//                dp[1][i] = 2 * dp[1][i-1] + dp[0][i-1];
+//                dp[2][i] = dp[2][i-1];
+//            }
+//            else if(str.charAt(i-1) == 'c'){
+//                dp[0][i] = dp[0][i-1];
+//                dp[1][i] = dp[1][i-1];
+//                dp[2][i] = 2 * dp[2][i-1] + dp[1][i-1];
+//            }
+//        }
+//        for (int[] a:dp){
+//            System.out.println(Arrays.toString(a));
+//        }
+//        return dp[2][str.length()];
+
+        int a= 0,ab= 0,abc= 0;
+        for (int i=0;i<str.length();i++){
+            if(str.charAt(i) == 'a'){
+                a = 2*a + 1;
+            }
+            else if(str.charAt(i) == 'b'){
+                ab = 2 * ab + a;
+            }
+            else { //char is 'c
+                abc = 2 * abc + ab;
+            }
+        }
+        return abc;
+
+    }
+
+    //https://nados.io/question/maximum-sum-non-adjacent-elements
+    public static int MaximumSumNonAdjacentElements(int[] elem){
+        int inclusive = 0; //max sum till i inclusive of the current element (not adjacent elements)
+        int exclusive = 0; //max sum till i exclusive of the current element (not adjacent elements)
+        //how to find inclusive ? = inclusive[i] = exclusive[i-1] + elem(i)
+        //how to find exclusive ? = exclusive[i] = max(inclusive[i-1] , exclusive[i-1])
+
+        for (int i=0;i< elem.length;i++){
+            int prevInclusive = inclusive;
+            inclusive = exclusive + elem[i];
+            exclusive = Math.max(prevInclusive , exclusive);
+        }
+        return Math.max(inclusive,exclusive);
+    }
+
+    //https://nados.io/question/paint-house
+    public static int PaintHouse(int[][] houses){
+        int red = 0;
+        int green = 0;
+        int blue = 0;
+        for (int i=0;i< houses.length;i++){
+            System.out.println(red + " " + green + " " + blue);
+            int prevRed = red , prevGreen = green , prevBlue = blue;
+            red = Math.min(prevGreen + houses[i][0] , prevBlue + houses[i][0]);
+            green = Math.min(prevRed + houses[i][1] , prevBlue + houses[i][1]);
+            blue = Math.min(prevRed + houses[i][2] , prevGreen + houses[i][2]);
+        }
+        return Math.min(red , Math.min(green , blue));
+    }
+
+    public static int PaintHouseManyColors(int[][] houses){
+        int[][] dp = new int[houses[0].length][houses.length];
+        for (int j=0;j<houses[0].length;j++){
+            dp[j][0] = houses[0][j];
+        }
+        for (int j=1;j<dp[0].length;j++){
+            for (int i=0;i<dp.length;i++){
+                int min = Integer.MAX_VALUE;
+                for (int k=0;k<houses[0].length;k++){
+                    if(k == i){
+                        continue;
+                    }
+                    min = Math.min(min , dp[k][j-1]);
+                }
+                dp[i][j] = houses[j][i] + min;
+            }
+        }
+        for(int[] r: dp){
+            System.out.println(Arrays.toString(r));
+        }
+        int ans = dp[0][houses.length-1];
+        for (int i=0;i<houses[0].length;i++){
+            ans = Math.min(ans , dp[i][houses.length-1]);
+        }
+        return ans;
+    }
+
+
+    //https://nados.io/question/paint-fence
+    //https://leetcode.com/problems/paint-fence/
+    public static int PaintFence(int n,int k){
+        int same = k;
+        int diff = k * (k-1);
+        int total = same + diff;
+
+        for (int i=3;i<=n;i++){
+            same = diff;
+            diff = total * (k-1);
+            total = same + diff;
+        }
+        return total;
+    }
+
+    //https://nados.io/question/tiling-with-2-1-tiles
+    public static int Tilingfloor(int floor,int[] qb){
+        //memoization
+        if(floor == 1){
+            return 1;
+        }
+        else if(floor == 2){
+            return 2;
+        }
+        else {
+            if(qb[floor] != 0){
+                return qb[floor];
+            }
+            int horizontalTiling = Tilingfloor(floor -1,qb);
+            int vericalTiling = Tilingfloor(floor -2,qb);
+            int totalWays = horizontalTiling + vericalTiling;
+            qb[floor] = totalWays;
+            return totalWays;
+        }
+    }
+
+    public static int Tilingfloor2(int n,int m){
+        //if length < breadth then there is only 1 way
+        if(n < m){
+            return 1;
+        }
+        //dp[i] = number of ways to tile a floor of length i
+        int[] dp = new int[n+1];
+        //floor of length has 0 ways
+        dp[0] = 0;
+        //till length < breath there is only 1 way to tile horizontal
+        for (int i=1;i<m;i++){
+            dp[i] = 1;
+        }
+        //when breadth is equal to length then there are two ways to tile vertically and horizontally
+        dp[m] = 2;
+        for (int i=m+1;i<=n;i++){
+            dp[i] = dp[i-1] + (i-m < 0 ? 0 : dp[i - m]);
+        }
+        return dp[n];
+    }
+
+    //https://nados.io/question/friends-pairing
+    public static int FriendsPairing(int n,int[] qb){
+        //memoization
+        //when we have 1 friend we can only make 1 combination
+        if(n == 1){
+            return 1;
+        }
+        //when we have two friends we can have 2 combinations ((12) friends -> 1-2(both solo) , 12(both pair))
+        else if(n == 2){
+            return 2;
+        }
+        else{
+            if(qb[n] != 0){
+                return qb[n];
+            }
+            int solo = FriendsPairing(n-1,qb);
+            int pair = (n-1) * FriendsPairing(n-2,qb);
+            int total = solo + pair;
+            qb[n] = total;
+            return total;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
