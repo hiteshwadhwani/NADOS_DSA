@@ -676,6 +676,189 @@ public class Questions {
         }
     }
 
+    //https://nados.io/question/partition-into-subsets\
+    public static long partitionKSubset(int n, int k) {
+        long[][] dp = new long[k+1][n+1];
+        for (int i=1;i<k+1;i++){
+            for (int j=1;j<n+1;j++){
+                if(i > j){
+                    dp[i][j] = 0;
+                }
+                else if(i == j){
+                    dp[i][j] = 1;
+                }
+                else{
+                    dp[i][j] = j * dp[i][j-1] + dp[i-1][j-1];
+                }
+            }
+        }
+        return dp[k][n];
+    }
+
+
+    //https://nados.io/question/buy-and-sell-stocks-one-transaction-allowed
+    public static int Buy_And_Sell_Stocks_One_Transaction_Allowed(int[] price){
+        int min = price[0];
+        int max = 0;
+        for (int i=0;i<price.length;i++){
+            if(price[i] < min){
+                min = price[i];
+            }
+            if(max < price[i] - min){
+                max = price[i] - min;
+            }
+        }
+        return max;
+    }
+
+    //https://nados.io/question/buy-and-sell-stocks-infinite-transactions-allowed
+    public static int Buy_And_Sell_Stocks_Infinite_Transactions_Allowed(int[] price){
+        int[] dp = new int[price.length +1];
+        int buy = price[0];
+        for (int i=1;i<dp.length;i++){
+            if(price[i-1] < buy){
+                buy = price[i-1];
+            }
+            int todaySellProfit = price[i-1] - buy;
+            if(todaySellProfit > 0){
+                dp[i] = todaySellProfit;
+                buy = price[i-1];
+            }
+        }
+        int maxProfit = 0;
+        for(int i:dp){
+            maxProfit += i;
+        }
+        return maxProfit;
+    }
+
+    //https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/
+    //same pattern Buy_And_Sell_Stocks_Infinite_Transactions_Allowed
+    public int maxProfit(int[] prices) {
+        int profit =0;
+        for(int i=1;i<prices.length;i++){
+            if(prices[i] > prices[i-1]){
+                profit += prices[i] - prices[i-1];
+            }
+        }
+        return profit;
+    }
+
+
+    //https://nados.io/question/buy-and-sell-stocks-with-transaction-fee-infinite-transactions-allowed
+    public static int Buy_And_Sell_Stocks_With_Transaction_Fee_Infinite_Transactions_Allowed(int[] prices,int transactionFee){            //very imp (SEEN)
+        int broughtStateProfit = -prices[0];
+        int soldStateProfit = 0;
+        for (int i=1;i<prices.length;i++){
+            int oldBroughtState = broughtStateProfit;
+            broughtStateProfit = Math.max(broughtStateProfit , soldStateProfit - prices[i]);
+            soldStateProfit = Math.max(soldStateProfit , prices[i] - transactionFee + oldBroughtState);
+        }
+        return soldStateProfit;
+    }
+
+    //https://nados.io/question/buy-and-sell-stocks-with-cooldown-infinite-transaction-allowed
+    public static int Buy_And_Sell_Stocks_With_Cooldown_Infinite_Transaction_Allowed(int[] prices){
+        int broughtStateProfit = -prices[0];
+        int soldStateProfit = 0;
+        int prevSoldStateProfit = 0;
+        for (int i=1;i<prices.length;i++){
+            int newBroughtStateProfit = 0;
+            int newSoldStateProfit = 0;
+            if(prevSoldStateProfit - prices[i] > broughtStateProfit){
+                newBroughtStateProfit = prevSoldStateProfit - prices[i];
+            }
+            else {
+                newBroughtStateProfit = broughtStateProfit;
+            }
+            if(prices[i] + broughtStateProfit > soldStateProfit){
+                newSoldStateProfit = prices[i] + broughtStateProfit;
+            }
+            else {
+                newSoldStateProfit = soldStateProfit;
+            }
+            prevSoldStateProfit = soldStateProfit;
+            broughtStateProfit = newBroughtStateProfit;
+            soldStateProfit = newSoldStateProfit;
+
+
+        }
+        return soldStateProfit;
+    }
+
+    //https://nados.io/question/buy-and-sell-stocks-k-transactions-allowed
+    public static int Buy_And_Sell_Stocks_K_Transactions_Allowed(int[] price,int k){
+        int[][] dp = new int[k+1][price.length];   //row = number of transaction , column = price of stock on day i
+        for (int i=1;i<dp.length;i++){
+            for (int j=1;j<dp[0].length;j++){
+                int max = dp[i][j-1];
+                for (int x=0;x<j;x++){
+                    max = Math.max(max , dp[i-1][x] + (price[j] - price[x]));
+                }
+                dp[i][j] = max;
+            }
+        }
+        return dp[k][price.length-1];
+        //O(n^3)
+    }
+
+    //optimized solution of above question
+    //https://nados.io/question/buy-and-sell-stocks-k-transactions-allowed
+    public static int Buy_And_Sell_Stocks_K_Transactions_Allowed_optimized_sol(int[] price,int k){
+        int[][] dp = new int[k+1][price.length];   //row = number of transaction , column = price of stock on day i
+        for (int i=1;i<dp.length;i++){
+            int max = Integer.MIN_VALUE;
+            for (int j=1;j<dp[0].length;j++){
+                max = Math.max(max , dp[i-1][j-1] - price[j-1]);
+                dp[i][j] = Math.max(dp[i][j-1] , max + price[j]);
+            }
+        }
+        return dp[k][price.length-1];
+        //O(n^2)
+    }
+
+    //https://nados.io/question/buy-and-sell-stocks-two-transactions-allowed
+    //this question can also be solved with above solution but with O(n^2) complexity, and we need optimized way
+    public static int Buy_And_Sell_Stocks_Two_Transactions_Allowed(int[] price){
+        int[] dpl = new int[price.length]; //dpl[i] stores the maximum profit from day 0 till day i where it is mandetory to sell on day i
+        int minLeft = price[0]; //it stores the minimum (buy) when filling dpl
+        for (int i=1;i<price.length;i++){
+            //dpl[i-1] = max profit till day i-1
+            //price[i] - minLeft = profit if we sell on day i
+            if(price[i] < minLeft){
+                minLeft = price[i];
+            }
+            dpl[i] = Math.max(dpl[i-1] , price[i] - minLeft);
+        }
+        int[] dpr = new int[price.length]; //dpr[i] stores the max profit from day i to price.length (last day) if it is mandetory to but on day i
+        int maxRight = price[price.length-1]; //it stores the maximum from right (selling value) when filling dpr
+        for (int i = price.length -2;i>=0;i--){
+            if(price[i] > maxRight){
+                maxRight = price[i];
+            }
+            dpr[i] = Math.max(dpr[i+1] , maxRight - price[i]);
+        }
+        //now to find maximum profit with 2 transactions we have 2 arrays dpl and dpr
+        //for day i we have max one transaction from left of i stored in dpl[i] and one max transaction from right of i stored in dpr[i]
+        int max = 0;
+        for (int i=0;i<price.length;i++){
+            max = Math.max(max , dpl[i] + dpr[i]);
+        }
+        return max;
+        //time complexity O(n)
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
